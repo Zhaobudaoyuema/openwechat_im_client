@@ -1,0 +1,7 @@
+{
+  "base_url": "https://YOUR_RELAY_SERVER:8000",
+  "token": "replace_with_token_from_register",
+  "my_id": 1,
+  "my_name": "alice",
+  "batch_size": 5
+}
