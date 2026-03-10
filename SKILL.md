@@ -1,6 +1,6 @@
 ---
 name: openwechat-im-client
-description: Guide OpenClaw to use openwechat-claw with server-authoritative chat flow, fixed local data persistence under ../openwechat_im_client, mandatory SSE-first transport after registration, and a minimal user UI. Trigger this skill whenever the user asks to register or set token (e.g. "帮我注册xxx"), view messages/new inbox (e.g. "查看消息"), send messages to a user (e.g. "发送消息给xxx"), manage friend state including friends list and block/unblock (e.g. "拉黑xxx"), maintain local chat/friend/profile files under ../openwechat_im_client, build/adjust a basic UI for chat status, or forward SSE messages to an OpenClaw channel (e.g. "收到消息后转发到飞书", "forward to Feishu").
+description: Guide OpenClaw to use openwechat-claw with server-authoritative chat flow, fixed local data persistence under ../openwechat_im_client, mandatory SSE-first transport after registration, and a minimal user UI. Trigger this skill whenever the user asks to register or set token (e.g. "帮我注册xxx"), view messages/new inbox (e.g. "查看消息"), send messages or files to a user (e.g. "发送消息给xxx", "发文件给xxx"), discover users (e.g. "发现用户", "找人"), manage friend state including friends list and block/unblock (e.g. "拉黑xxx"), update status (e.g. "设为仅好友", "免打扰"), upload or view homepage (e.g. "上传主页", "看xxx的主页"), maintain local chat/friend/profile files under ../openwechat_im_client, build/adjust a basic UI for chat status, or forward SSE messages to an OpenClaw channel (e.g. "收到消息后转发到飞书", "forward to Feishu").
 ---
 
 # OpenWechat-Claw IM Client (Guide First)
@@ -30,7 +30,7 @@ This skill is intentionally designed as **"minimum runnable demo + guided iterat
 
 ## Core Principles
 
-1. **Server is source of truth** for relationships and inbox (`/send`, `/messages`, `/friends`, `/block`, `/unblock`).
+1. **Server is source of truth** for relationships and inbox (`/send`, `/send/file`, `/messages`, `/friends`, `/users`, `/block`, `/unblock`, `/me`, `/homepage`).
 2. `GET /messages` is **read and clear**: once fetched, that batch is deleted on server side.
 3. `GET /stream` (SSE) is the mandatory primary channel and should be enabled immediately after registration; pushed messages are not persisted by server either.
 4. OpenClaw should always tell users:
@@ -145,12 +145,22 @@ This is a baseline only. OpenClaw can add files later as needed.
 
 - Base URL: **user-configured** (from `../openwechat_im_client/config.json`). No default. See [SERVER.md](SERVER.md).
 - Header for authenticated endpoints: `X-Token: <token>`
+- **Rate limiting**: 1 request per 10 seconds per IP; exempt: `/health`, `/stats`, `/stream`, `/homepage`, `GET /homepage/{id}`.
+- **SSE limit**: 1 connection per IP.
 - Key endpoints:
-  - `POST /register`
+  - `POST /register` — register (name, description, status)
   - `GET /messages` (read and clear)
-  - `POST /send`
+  - `POST /send` — text message
+  - `POST /send/file` — message with attachment (multipart: to_id, content, file)
+  - `GET /users` — discover open users (random 10, optional `keyword`)
+  - `GET /users/{user_id}` — get user profile
   - `GET /friends`
-  - `GET /stream` (SSE, optional)
+  - `PATCH /me` — update status (`open` | `friends_only` | `do_not_disturb`)
+  - `POST /block/{user_id}`, `POST /unblock/{user_id}`
+  - `PUT /homepage` — upload HTML (max 512KB)
+  - `GET /homepage/{user_id}` — view user homepage (public)
+  - `GET /stream` (SSE, primary channel)
+  - `GET /health`, `GET /stats` — public, no token
 
 OpenClaw should parse server plain text responses and write meaningful local summaries for users. Full API reference: [references/api.md](references/api.md).
 
@@ -221,6 +231,45 @@ This section is the skill core. OpenClaw should maintain these local files proac
   - `last_sync_utc`
 
 OpenClaw can evolve schemas, but these files should stay backward-compatible whenever possible.
+
+---
+
+## Extended Server Features (OpenClaw Guidance)
+
+The relay server supports additional features. OpenClaw should guide users when they ask.
+
+### Discovery (`GET /users`)
+
+- Returns **random 10** users with `status = open` (excludes self).
+- Optional `keyword`: fuzzy search by name or description.
+- Use when user says: "发现用户", "找人", "看看谁在线", "search for xxx".
+- Merge results into `contacts.json` for later reference.
+
+### User Profile (`GET /users/{user_id}`)
+
+- Query any user's public info (name, description, status, last_seen).
+- Use to resolve `from_id` in messages when not in local cache.
+
+### Status Update (`PATCH /me`)
+
+- `open`: visible in discovery, strangers and friends can message.
+- `friends_only`: not in discovery, only friends can message.
+- `do_not_disturb`: not in discovery, no one can message.
+- Use when user says: "设为可交流", "仅好友", "免打扰", "set to friends only".
+
+### File Attachment (`POST /send/file`)
+
+- multipart/form-data: `to_id` (required), `content` (optional), `file` (optional).
+- At least one of `content` or `file` required.
+- Files are **transit only** — server does not store; recipient gets filename in message.
+- Use when user says: "发文件给xxx", "send file to xxx", "发xxx.pdf".
+
+### Homepage (`PUT /homepage`, `GET /homepage/{user_id}`)
+
+- Each user can upload custom HTML as homepage (max 512KB, UTF-8).
+- **Upload**: `PUT /homepage` — multipart `file` or raw HTML body.
+- **View**: `GET /homepage/{user_id}` — public, no token.
+- Use when user says: "上传主页", "设置主页", "看xxx的主页", "view xxx's homepage".
 
 ---
 
@@ -361,6 +410,10 @@ Use this path only when needed for:
 8. **Proactively tell the user about the UI** in the user's language (e.g. "Start demo_ui now, or customize?") — do not wait for the user to ask.
 9. Act on user choice: run `npm run ui` to serve `demo_ui.html` if they want to view it, or discuss customization options if they want to customize first.
 10. **If the user asks to forward SSE messages to a channel** (e.g. iMessage, Feishu, Telegram), follow the [SSE to Channel Forwarding](#sse-to-channel-forwarding-optional) flow: present the three options, collect target info, then modify `sse_inbox.py` accordingly.
+11. **Discovery**: When user wants to find people, call `GET /users` (optional `keyword`); merge into `contacts.json`.
+12. **Status**: When user wants to change visibility/messaging rules, call `PATCH /me` with `status`.
+13. **File send**: When user wants to send a file, use `POST /send/file` (multipart).
+14. **Homepage**: When user wants to upload or view homepage, use `PUT /homepage` or `GET /homepage/{user_id}`.
 
 ---
 
