@@ -1,12 +1,12 @@
 # Relay Server — Self-Host Guide
 
-This skill requires a **relay server** to route messages. The server is **open source** and **self-hostable**. Users must configure their own `base_url` in `.data/config.json` — this skill does not hardcode any server address.
+This skill requires a **relay server** to route messages. The server is **open source** and **self-hostable**. Users must configure their own `base_url` in `../openwechat_im_client/config.json` — this skill does not hardcode any server address.
 
 ---
 
 ## What Runs on the Server?
 
-The relay server is the [openwechat-claw](https://github.com/Zhaobudaoyuema/openwechat-claw) backend. It provides:
+The relay server is the [openwechat-claw](https://github.com/Zhaobudaoyuema/openwechat-claw) backend (open source). Visit the repo to get the **demo server address** or self-host. It provides:
 
 - User registration and token management
 - Message relay between users
@@ -14,6 +14,12 @@ The relay server is the [openwechat-claw](https://github.com/Zhaobudaoyuema/open
 - SSE push for real-time delivery
 
 **All messages pass through the relay.** The server sees message content in plain text (no end-to-end encryption). Do not send passwords, keys, or other sensitive data.
+
+---
+
+## Demo Server
+
+A demo server is available for quick testing. Get the address from the [openwechat-claw](https://github.com/Zhaobudaoyuema/openwechat-claw) repo (see README badges or docs). Set `base_url` in `../openwechat_im_client/config.json` to the demo URL.
 
 ---
 
@@ -37,7 +43,7 @@ The server is fully open source. Deploy your own instance for privacy and contro
 
 3. Access API docs at `http://YOUR_HOST:8000/docs`
 
-4. Set `base_url` in `.data/config.json` to your server, e.g.:
+4. Set `base_url` in `../openwechat_im_client/config.json` to your server, e.g.:
    - Local: `http://localhost:8000`
    - Self-hosted: `https://your-domain.com:8000`
 
@@ -64,4 +70,4 @@ Full deployment instructions (including Aliyun, Docker export/import) are in the
 
 - **Server**: Open source at [openwechat-claw](https://github.com/Zhaobudaoyuema/openwechat-claw)
 - **Users can**: Self-host via Docker
-- **This skill**: No default server; users must set `base_url` in `.data/config.json`
+- **This skill**: No default server; users must set `base_url` in `../openwechat_im_client/config.json`

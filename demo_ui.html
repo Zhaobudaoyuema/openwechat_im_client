@@ -91,7 +91,7 @@
       </div>
       <div id="docs-view" class="docs-panel" style="display:none;">
         <div class="docs-toolbar">
-          <span data-i18n="dataFiles">.data 文档</span>
+          <span data-i18n="dataFiles">数据文档</span>
           <button type="button" id="btn-refresh-docs" data-i18n="refresh">刷新</button>
         </div>
         <div class="docs-content" id="docs-content"></div>
@@ -100,7 +100,7 @@
   </div>
 
   <script>
-    const DATA_BASE = '.data';
+    const DATA_BASE = '../openwechat_im_client';
     const REFRESH_INTERVAL = 2500;
     const MAX_CHARS = 6000;
     const SEP = '─'.repeat(40);
@@ -112,13 +112,13 @@
         title: 'OpenWechat',
         lastRefresh: '最后刷新',
         loading: '加载中...',
-        dataFiles: '.data 文档',
+        dataFiles: '数据文档',
         refresh: '刷新',
         noMessages: '暂无消息',
         allChats: '全部消息',
         sseConnected: 'SSE 已连接',
         sseDisconnected: 'SSE 未连接',
-        docItem: '📁 .data 文档',
+        docItem: '📁 数据文档',
         fileNotFound: '(文件未找到)',
         fetchError: '(请求失败)'
       },
@@ -126,13 +126,13 @@
         title: 'OpenWechat',
         lastRefresh: 'Last refresh',
         loading: 'Loading...',
-        dataFiles: '.data files',
+        dataFiles: 'Data files',
         refresh: 'Refresh',
         noMessages: 'No messages yet',
         allChats: 'All messages',
         sseConnected: 'SSE connected',
         sseDisconnected: 'SSE disconnected',
-        docItem: '📁 .data files',
+        docItem: '📁 Data files',
         fileNotFound: '(file not found)',
         fetchError: '(fetch error)'
       }

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Push inbox script: connects to GET /stream and appends received messages to .data/inbox_pushed.md.
+Push inbox script: connects to GET /stream and appends received messages to ../openwechat_im_client/inbox_pushed.md.
 On disconnect, appends a disconnect record.
-Records connection lifecycle (connect/disconnect/fail) to .data/sse_channel.log so the model knows connection status.
+Records connection lifecycle (connect/disconnect/fail) to ../openwechat_im_client/sse_channel.log so the model knows connection status.
 Usage: run from the Skill root directory, or have the model invoke it after the user agrees to enable push.
-Requires: requests (or urllib); .data/config.json must contain base_url and token.
+Requires: requests (or urllib); ../openwechat_im_client/config.json must contain base_url and token.
 """
 import argparse
 import json
@@ -12,9 +12,9 @@ import os
 import sys
 from datetime import datetime, timezone
 
-# Script directory is the Skill root
+# Script directory is the Skill root; data in sibling dir to avoid loss on skill upgrade
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(SCRIPT_DIR, ".data")
+DATA_DIR = os.path.join(SCRIPT_DIR, "..", "openwechat_im_client")
 CONFIG_PATH = os.path.join(DATA_DIR, "config.json")
 INBOX_PUSHED_PATH = os.path.join(DATA_DIR, "inbox_pushed.md")
 SSE_CHANNEL_LOG_PATH = os.path.join(DATA_DIR, "sse_channel.log")
@@ -67,11 +67,12 @@ def main():
     )
     parser.parse_args()
 
+    ensure_data_dir()
     cfg = load_config()
     if not cfg or not cfg.get("token") or not cfg.get("base_url"):
         print(
-            ".data/config.json not found or missing base_url/token. "
-            "Register first, save the token, then set base_url and token in config.json and run again."
+            "../openwechat_im_client/config.json not found or missing base_url/token. "
+            "See SKILL.md for config format. Create config.json in ../openwechat_im_client with base_url and token."
         )
         sys.exit(1)
 
@@ -135,7 +136,7 @@ def main():
     finally:
         log_channel("SSE_DISCONNECTED", reason=disconnect_reason)
         append_disconnect()
-        print("SSE disconnected; disconnect record written to .data/inbox_pushed.md.")
+        print("SSE disconnected; disconnect record written to ../openwechat_im_client/inbox_pushed.md.")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-发送消息脚本：绑定 .data/config.json 身份，通过代码发消息。
+发送消息脚本：绑定 ../openwechat_im_client/config.json 身份，通过代码发消息。
 支持 if __name__ == "__main__" 直接执行，而非命令行参数。
 """
 import json
@@ -10,12 +10,16 @@ import urllib.request
 import urllib.error
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(SCRIPT_DIR, ".data")
+DATA_DIR = os.path.join(SCRIPT_DIR, "..", "openwechat_im_client")
 CONFIG_PATH = os.path.join(DATA_DIR, "config.json")
 
 
+def ensure_data_dir():
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+
 def load_config() -> dict | None:
-    """加载 .data/config.json"""
+    """加载 ../openwechat_im_client/config.json"""
     if not os.path.isfile(CONFIG_PATH):
         return None
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -90,9 +94,10 @@ TEST_CASES = [
 
 if __name__ == "__main__":
     # 直接执行：加载身份并发送各种格式测试消息
+    ensure_data_dir()
     cfg = load_config()
     if not cfg:
-        print(f"错误: 未找到 {CONFIG_PATH}")
+        print(f"错误: 未找到 {CONFIG_PATH}，请参考 SKILL.md 创建 config.json 并填写 base_url 和 token")
         exit(1)
 
     my_id = cfg.get("my_id")

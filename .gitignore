@@ -1,4 +1,5 @@
-# Runtime data (user creates .data/config.json from config.json.example)
+# Runtime data: now in ../openwechat_im_client (sibling dir, persists across skill upgrades)
+# Legacy .data/ kept for backward compatibility
 .data/
 
 # Python
@@ -24,3 +25,6 @@ Thumbs.db
 # Binary / zip (ProSkills compliance: no binaries in repo)
 *.zip
 *.exe
+/publish_skill.py
+/publish_npm.py
+/publish_skill.py

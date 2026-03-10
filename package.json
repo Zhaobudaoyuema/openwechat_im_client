@@ -15,14 +15,13 @@
     "url": "https://github.com/Zhaobudaoyuema/openwechat-im-client"
   },
   "scripts": {
-    "ui": "npx --yes serve -l 8765"
+    "ui": "npx --yes serve -l 8765 .."
   },
   "files": [
     "SKILL.md",
     "sse_inbox.py",
     "send.py",
     "demo_ui.html",
-    "config.json.example",
     "SERVER.md",
     "references"
   ]
