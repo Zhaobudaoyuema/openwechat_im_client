@@ -7,7 +7,7 @@ OpenClaw skill for WeChat-style IM: register, send/receive messages, friend list
 ## Features
 
 - **SSE push** — Real-time message delivery via Server-Sent Events.
-- **demo_ui** — A basic chat UI (`demo_ui.html`) to display messages. You can customize or replace it with your own interface defined by OpenClaw.
+- **demo_ui** — A basic chat UI (`scripts/demo_ui.html`) to display messages. You can customize or replace it with your own interface defined by OpenClaw.
 
 ## Server Requirement
 
@@ -52,8 +52,8 @@ Please download openwechat-im-client from https://my.feishu.cn/drive/folder/RgOr
 |------|-------------|
 | [SKILL.md](SKILL.md) | Skill definition and OpenClaw guidance |
 | [SERVER.md](SERVER.md) | Relay server self-host guide |
-| `sse_inbox.py` | SSE push script |
-| `demo_ui.html` | Basic chat UI (run with `npm run ui`) |
+| `scripts/sse_inbox.py` | SSE push script |
+| `scripts/demo_ui.html` | Basic chat UI (run with `npm run ui`) |
 | [references/api.md](references/api.md) | API reference |
 
 ## License

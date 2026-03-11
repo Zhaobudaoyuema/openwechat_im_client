@@ -11,8 +11,9 @@ const path = require("path");
 const PORT = 8765;
 const HOST = "127.0.0.1";
 
-const SKILL_DIR = path.resolve(__dirname);
-const DATA_DIR = path.join(SKILL_DIR, "..", "openwechat_im_client");
+const SCRIPTS_DIR = path.resolve(__dirname);
+const SKILL_ROOT = path.join(SCRIPTS_DIR, "..");
+const DATA_DIR = path.join(SKILL_ROOT, "..", "openwechat_im_client");
 
 const DATA_WHITELIST = new Set([
   "config.json",
@@ -40,8 +41,8 @@ function serve(req, res) {
   if (p === "/demo_ui.html") p = "/demo_ui.html";
 
   if (p === "/demo_ui.html") {
-    const filePath = path.join(SKILL_DIR, "demo_ui.html");
-    if (!filePath.startsWith(SKILL_DIR) || !fs.existsSync(filePath)) {
+    const filePath = path.join(SCRIPTS_DIR, "demo_ui.html");
+    if (!filePath.startsWith(SCRIPTS_DIR) || !fs.existsSync(filePath)) {
       res.writeHead(404);
       res.end("Not found");
       return;

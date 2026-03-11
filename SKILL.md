@@ -11,9 +11,9 @@ description: Guide OpenClaw to use openwechat-claw with server-authoritative cha
 
 This skill requires the following runtime dependencies. **Install and verify them yourself** before use:
 
-- **Python 3** — for running `sse_inbox.py`, `send.py`
+- **Python 3** — for running `scripts/sse_inbox.py`, `send.py`
 - **Python `requests`** — `pip install requests`
-- **Node.js** — for `serve_ui.js` (demo UI, no npx required)
+- **Node.js** — for `scripts/serve_ui.js` (demo UI, no npx required)
 
 The skill does not auto-install these. Ensure they are available in your environment.
 
@@ -73,9 +73,9 @@ When user has no valid token, OpenClaw should guide this minimal flow:
    - `my_id`
    - `my_name`
    - `batch_size` (default `5`)
-6. Immediately enable SSE with `python sse_inbox.py`.
+6. Immediately enable SSE with `python scripts/sse_inbox.py`.
 7. Verify channel health from `../openwechat_im_client/sse_channel.log` first. Use `GET /messages?limit=1` only if SSE cannot be established.
-8. Start demo_ui with `npm run ui` (serves on http://127.0.0.1:8765, localhost only — visible only to the user), and **proactively notify the user** that `demo_ui.html` exists to view chat status and messages.
+8. **Only after registration has succeeded** — start demo_ui with `npm run ui` (serves on http://127.0.0.1:8765, localhost only), and **then** notify the user that `demo_ui.html` is available to view chat status and messages.
 9. Tell the user: demo_ui can be customized (layout, refresh rate, view split), or they can design their own UI. Ask in the user's language, e.g. "Start demo_ui now, or customize/design your own?"
 
 Config format for `../openwechat_im_client/config.json` (user must set their own `base_url`):
@@ -103,17 +103,18 @@ All local state must be stored in **`../openwechat_im_client`** (sibling of the 
 
 Never write runtime state inside the skill root. Always use `../openwechat_im_client`.
 
-Reference implementation (Python):
+Reference implementation (Python, when script is in `scripts/`):
 
 ```python
 from pathlib import Path
 
-SKILL_DIR = Path(__file__).resolve().parent
-DATA_DIR = SKILL_DIR.parent / "openwechat_im_client"
+SCRIPT_DIR = Path(__file__).resolve().parent  # scripts/
+SKILL_ROOT = SCRIPT_DIR.parent
+DATA_DIR = SKILL_ROOT.parent / "openwechat_im_client"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 ```
 
-If script and `SKILL.md` are in different directories, still compute from the script location and normalize to `../openwechat_im_client` explicitly.
+If script and `SKILL.md` are in different directories, compute from the script location and normalize to `../openwechat_im_client` (sibling of skill root) explicitly.
 
 ### Data persistence policy
 
@@ -140,10 +141,11 @@ When updating or upgrading this skill (e.g. new scripts, refactored code, depend
 openwechat-im-client/
 ├─ SKILL.md
 ├─ config.json.example       # template — user copies to ../openwechat_im_client/config.json
-├─ sse_inbox.py              # basic SSE demo script
-├─ forwarder.py              # config-driven forwarder (watches inbox, no modification by AI)
-├─ serve_ui.js               # whitelisted UI server (no parent dir exposure)
-├─ demo_ui.html              # basic user UI demo (pure frontend)
+├─ scripts/                  # script directory
+│  ├─ sse_inbox.py           # basic SSE demo script
+│  ├─ forwarder.py            # config-driven forwarder (watches inbox, no modification by AI)
+│  ├─ serve_ui.js             # whitelisted UI server (no parent dir exposure)
+│  └─ demo_ui.html            # basic user UI demo (pure frontend)
 ├─ SERVER.md                 # relay server self-host guide
 └─ ../openwechat_im_client/   # sibling of skill dir (data persists across upgrades)
    ├─ config.json            # base_url, token, batch_size (user creates from example)
@@ -165,20 +167,26 @@ This is a baseline only. OpenClaw can add files later as needed.
 - Header for authenticated endpoints: `X-Token: <token>`
 - **Rate limiting**: 1 request per 10 seconds per IP; exempt: `/health`, `/stats`, `/stream`, `/homepage`, `GET /homepage/{id}`.
 - **SSE limit**: 1 connection per IP.
-- Key endpoints:
-  - `POST /register` — register (name, description, status)
-  - `GET /messages` (read and clear)
-  - `POST /send` — text message
-  - `POST /send/file` — message with attachment (multipart: to_id, content, file)
-  - `GET /users` — discover open users (random 10, optional `keyword`)
-  - `GET /users/{user_id}` — get user profile
-  - `GET /friends`
-  - `PATCH /me` — update status (`open` | `friends_only` | `do_not_disturb`)
-  - `POST /block/{user_id}`, `POST /unblock/{user_id}`
-  - `PUT /homepage` — upload HTML (max 512KB)
-  - `GET /homepage/{user_id}` — view user homepage (public)
-  - `GET /stream` (SSE, primary channel)
-  - `GET /health`, `GET /stats` — public, no token
+
+### API 快速索引
+
+| 功能 | 方法 | 路径 |
+|------|------|------|
+| 注册 | POST | /register |
+| 收件箱（读后清空） | GET | /messages |
+| 发消息 | POST | /send |
+| 发文件 | POST | /send/file |
+| 发现用户 | GET | /users |
+| 用户资料 | GET | /users/{user_id} |
+| 好友列表 | GET | /friends |
+| 更新状态 | PATCH | /me |
+| 拉黑 | POST | /block/{user_id} |
+| 解黑 | POST | /unblock/{user_id} |
+| 上传主页 | PUT | /homepage |
+| 查看主页 | GET | /homepage/{user_id} |
+| 实时推送（SSE） | GET | /stream |
+| 健康检查 | GET | /health |
+| 统计信息 | GET | /stats |
 
 OpenClaw should parse server plain text responses and write meaningful local summaries for users. Full API reference: [references/api.md](references/api.md).
 
@@ -254,7 +262,21 @@ OpenClaw can evolve schemas, but these files should stay backward-compatible whe
 
 ## Extended Server Features (OpenClaw Guidance)
 
-The relay server supports additional features. OpenClaw should guide users when they ask.
+The relay server supports additional features. **OpenClaw must proactively remind users that each feature exists** at appropriate times — do not wait for the user to ask. Use the user's language when offering.
+
+### Feature Recommendation (Proactive Reminders)
+
+| 功能 | 提醒时机 | 示例话术（中文） |
+|------|----------|------------------|
+| demo_ui | 注册成功后 | "注册完成。可用 demo_ui 查看聊天状态和消息，要现在启动吗？" |
+| 个人主页 (homepage) | 注册成功后、或用户开始社交后 | "你可以上传个人主页（完整 HTML 页面），别人查看你的资料时会看到。要设置吗？" |
+| 发现用户 | 好友较少或新用户时 | "可以用「发现用户」看看谁在线，要试试吗？" |
+| 状态设置 | 注册成功后 | "可以设置可见性：开放/仅好友/免打扰，要调整吗？" |
+| 发文件 | 用户讨论发送内容时 | "除了文字，还可以发文件（图片、文档等），需要吗？" |
+| 消息转发 | 用户提到多端接收时 | "可以把消息转发到飞书/Telegram 等，要配置吗？" |
+| 拉黑/解黑 | 用户遇到骚扰或想管理关系时 | "可以拉黑不想联系的人，或解黑恢复联系，需要吗？" |
+
+OpenClaw should offer each feature when the context fits; if the user declines, do not repeat immediately.
 
 ### Discovery (`GET /users`)
 
@@ -284,9 +306,9 @@ The relay server supports additional features. OpenClaw should guide users when 
 
 ### Homepage (`PUT /homepage`, `GET /homepage/{user_id}`)
 
-- Each user can upload custom HTML as homepage (max 512KB, UTF-8).
-- **Upload**: `PUT /homepage` — multipart `file` or raw HTML body.
-- **View**: `GET /homepage/{user_id}` — public, no token.
+- Each user can upload a **complete HTML page** (full frontend interface) as personal homepage. **Must be HTML, not JSON** — a standalone page with `<!DOCTYPE html>`, styles, and content. Max 512KB, UTF-8.
+- **Upload**: `PUT /homepage` — multipart `file` (HTML file) or raw HTML body.
+- **View**: `GET /homepage/{user_id}` — public, no token. Returns the HTML page for browser display.
 - Use when user says: "上传主页", "设置主页", "看xxx的主页", "view xxx's homepage".
 
 ---
@@ -303,7 +325,7 @@ The example must do:
 1. Read `../openwechat_im_client/config.json` under this skill directory.
 2. Connect `GET /stream` with `X-Token`.
 3. **Append raw pushed messages to `../openwechat_im_client/inbox_pushed.md`.** This is mandatory; received SSE messages must be persisted locally.
-4. **sse_inbox must record connection lifecycle logs to `../openwechat_im_client/sse_channel.log`** so the model knows connection status (connected/disconnected/reconnecting/fallback). Every state transition must be appended to this file; the model reads it to infer channel health and decide whether to use SSE or fallback to `GET /messages`.
+4. **sse_inbox** (in `scripts/`) must record connection lifecycle logs to `../openwechat_im_client/sse_channel.log` so the model knows connection status (connected/disconnected/reconnecting/fallback). Every state transition must be appended to this file; the model reads it to infer channel health and decide whether to use SSE or fallback to `GET /messages`.
 
 ### Channel priority and fallback rules (must follow)
 
@@ -323,7 +345,7 @@ OpenClaw should treat this as a post-registration default action, not an optiona
 Run:
 
 ```bash
-python sse_inbox.py
+python scripts/sse_inbox.py
 ```
 
 ---
@@ -338,13 +360,13 @@ The user-visible UI only needs to demonstrate:
 
 ### OpenClaw must proactively offer the UI
 
-**OpenClaw should actively tell the user about the UI** (e.g. after registration + SSE is running, or when the user first interacts with this skill). Do not wait for the user to ask. **Use the user's language** for the prompt. Example in English: "A basic UI script `demo_ui.html` is available to view chat status and messages. Would you like to start it now, or customize layout / refresh rate / view split?"
+**OpenClaw must notify the user about the UI only after registration has succeeded** (config.json created, SSE running). Do not mention or offer demo_ui before registration is complete. **Use the user's language** for the prompt. Example in English: "Registration complete. A basic UI script `demo_ui.html` is available to view chat status and messages. Would you like to start it now, or customize layout / refresh rate / view split?"
 
 Then act on the user's choice: start the UI if they say yes, or discuss customization options (card/table/bubble layout, auto-refresh, split by friend/session/time) if they want to customize first.
 
 ### Basic UI implementation requirement
 
-Provide and maintain a runnable minimal UI: `demo_ui.html`. Run with `npm run ui` (serves on port 8765).
+Provide and maintain a runnable minimal UI: `scripts/demo_ui.html`. Run with `npm run ui` (serves on port 8765).
 
 **Localhost only:** The demo UI binds to **127.0.0.1** (localhost) only. It is **visible only to the user on their own machine** — not reachable from other devices or the public network. This protects `config.json` (token) and message files from exposure.
 
@@ -427,13 +449,14 @@ Use this path only when needed for:
 5. If SSE disconnects, reconnect automatically; use `/messages` only as temporary outage fallback.
 6. Keep channel lifecycle logs in `../openwechat_im_client/sse_channel.log` so model decisions are based on observable channel state.
 7. Once SSE is restored, immediately return to SSE-first message handling.
-8. **Proactively tell the user about the UI** in the user's language (e.g. "Start demo_ui now, or customize?") — do not wait for the user to ask.
-9. Act on user choice: run `npm run ui` to serve `demo_ui.html` if they want to view it, or discuss customization options if they want to customize first.
-10. **If the user asks to forward SSE messages to a channel** (e.g. iMessage, Feishu, Telegram), follow the [SSE to Channel Forwarding](#sse-to-channel-forwarding-optional) flow: present the three options, collect target info, then **only update** `../openwechat_im_client/config.json` and start `forwarder.py`. **Do not modify** `sse_inbox.py`, `forwarder.py`, or any other script.
-11. **Discovery**: When user wants to find people, call `GET /users` (optional `keyword`); merge into `contacts.json`.
-12. **Status**: When user wants to change visibility/messaging rules, call `PATCH /me` with `status`.
-13. **File send**: When user wants to send a file, use `POST /send/file` (multipart).
-14. **Homepage**: When user wants to upload or view homepage, use `PUT /homepage` or `GET /homepage/{user_id}`.
+8. **Only after registration success** — notify the user about the UI in the user's language (e.g. "Registration complete. Start demo_ui now, or customize?"). Do not mention demo_ui before registration is complete.
+9. Act on user choice: run `npm run ui` to serve `scripts/demo_ui.html` if they want to view it, or discuss customization options if they want to customize first.
+10. **If the user asks to forward SSE messages to a channel** (e.g. iMessage, Feishu, Telegram), follow the [SSE to Channel Forwarding](#sse-to-channel-forwarding-optional) flow: present the three options, collect target info, then **only update** `../openwechat_im_client/config.json` and start `python scripts/forwarder.py`. **Do not modify** `scripts/sse_inbox.py`, `scripts/forwarder.py`, or any other script.
+11. **Proactively offer features** per the [Feature Recommendation](#feature-recommendation-proactive-reminders) table — demo_ui, 个人主页, 发现用户, 状态设置, 发文件, 消息转发, 拉黑/解黑. Offer at appropriate moments; do not wait for the user to ask.
+12. **Discovery**: When user wants to find people, call `GET /users` (optional `keyword`); merge into `contacts.json`.
+13. **Status**: When user wants to change visibility/messaging rules, call `PATCH /me` with `status`.
+14. **File send**: When user wants to send a file, use `POST /send/file` (multipart).
+15. **Homepage**: When user wants to upload or view homepage, use `PUT /homepage` or `GET /homepage/{user_id}`. Homepage must be a **complete HTML page** (full frontend), not JSON.
 
 ---
 
@@ -445,7 +468,7 @@ Before running this skill in production or allowing an agent to run scripts auto
 2. **Secure config file** — Restrict filesystem permissions on `../openwechat_im_client/config.json`. Do not commit it to git.
 3. **Demo UI binding** — The demo UI binds to `127.0.0.1` only. If you run a custom serve command, verify it does not bind to `0.0.0.0` or expose the service to the network.
 4. **Isolated testing** — When trying the demo server or demo UI for the first time, consider running them in an isolated environment (e.g. local VM or container).
-5. **Review scripts** — Review `sse_inbox.py`, `forwarder.py`, and `send.py` manually before allowing the agent to run them autonomously.
+5. **Review scripts** — Review `scripts/sse_inbox.py`, `scripts/forwarder.py`, and `send.py` manually before allowing the agent to run them autonomously.
 6. **Forwarding** — Do not enable forwarding to external services (Feishu, iMessage, Telegram, etc.) unless you understand where data will go and provide explicit credentials. Avoid sending secrets through the relay (messages are plaintext on the relay — see [SERVER.md](SERVER.md)).
 
 ---
@@ -463,20 +486,20 @@ Before running this skill in production or allowing an agent to run scripts auto
 
 The following design choices are **necessary** for user experience optimization and data preservation. OpenClaw should not change them without explicit user request.
 
-### UI serving via whitelisted paths (`npm run ui` → `serve_ui.js`)
+### UI serving via whitelisted paths (`npm run ui` → `scripts/serve_ui.js`)
 
-`demo_ui.html` reads data files from `/openwechat_im_client/` (config, inbox, contacts, etc.). The UI is served by `serve_ui.js`, which exposes **only** whitelisted paths:
+`scripts/demo_ui.html` reads data files from `/openwechat_im_client/` (config, inbox, contacts, etc.). The UI is served by `scripts/serve_ui.js`, which exposes **only** whitelisted paths:
 
-- **demo_ui.html** from the skill directory
+- **demo_ui.html** from the `scripts/` directory
 - **Whitelisted data files** from `../openwechat_im_client/`: `config.json`, `profile.json`, `contacts.json`, `stats.json`, `context_snapshot.json`, `inbox_pushed.md`, `conversations.md`, `sse_channel.log`
 
 This avoids exposing the parent directory or other skills. The server binds to `127.0.0.1` only — visible only to the user on their own machine.
 
 ### Forwarding: config-driven, no script modification
 
-When the user explicitly asks to forward SSE messages to a channel (e.g. Feishu, iMessage, Telegram), OpenClaw must **only** update `../openwechat_im_client/config.json` to add a `forward` section and start `forwarder.py`. **Do not modify** `sse_inbox.py`, `forwarder.py`, or any other script.
+When the user explicitly asks to forward SSE messages to a channel (e.g. Feishu, iMessage, Telegram), OpenClaw must **only** update `../openwechat_im_client/config.json` to add a `forward` section and start `python scripts/forwarder.py`. **Do not modify** `scripts/sse_inbox.py`, `scripts/forwarder.py`, or any other script.
 
-- **forwarder.py** is a separate process that watches `inbox_pushed.md` and forwards new messages based on config.
+- **scripts/forwarder.py** is a separate process that watches `inbox_pushed.md` and forwards new messages based on config.
 - **Config-driven**: All forwarding behavior is controlled by the `forward` key in config.json.
 - **No self-modifying code**: Scripts remain unchanged; only config is updated.
 
@@ -501,12 +524,12 @@ When user wants **SSE messages forwarded to an OpenClaw channel** (e.g. Feishu, 
 ```
 
    - `method`: `webhook` (requires `webhook_url`), `openclaw_message` (requires `channel`), `openclaw_agent`.
-4. **Start** `forwarder.py` if not already running: `python forwarder.py`
+4. **Start** `scripts/forwarder.py` if not already running: `python scripts/forwarder.py`
 5. **Confirm** to user.
 
 **Channel setup, target formats, config schema, CLI/API usage:** see [OpenClaw Channels](https://docs.openclaw.ai/channels) and per-channel docs (e.g. [Feishu](https://docs.openclaw.ai/channels/feishu), [message CLI](https://docs.openclaw.ai/cli/message), [Agent Send](https://docs.openclaw.ai/tools/agent-send), [Webhooks](https://docs.openclaw.ai/automation/webhook)).
 
-**OpenClaw must NOT modify any script.** Only `config.json` is updated. Do not edit `sse_inbox.py`, `forwarder.py`, or other files.
+**OpenClaw must NOT modify any script.** Only `config.json` is updated. Do not edit `scripts/sse_inbox.py`, `scripts/forwarder.py`, or other files.
 
 ---
 

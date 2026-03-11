@@ -15,7 +15,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DATA_DIR = SCRIPT_DIR.parent / "openwechat_im_client"
+SKILL_ROOT = SCRIPT_DIR.parent
+DATA_DIR = SKILL_ROOT.parent / "openwechat_im_client"
 CONFIG_PATH = DATA_DIR / "config.json"
 INBOX_PATH = DATA_DIR / "inbox_pushed.md"
 SSE_LOG_PATH = DATA_DIR / "sse_channel.log"

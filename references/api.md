@@ -165,11 +165,11 @@ Append system line to `conversations/<user_id>.md`:
 
 ### PUT /homepage
 
-Upload own homepage HTML. multipart `file` or raw HTML body. Max 512KB, UTF-8. **Response:** Plain text with access URL `GET /homepage/{user_id}`.
+Upload own homepage. **Must be a complete HTML page** (full frontend interface), not JSON — standalone page with `<!DOCTYPE html>`, styles, and content. multipart `file` (HTML file) or raw HTML body. Max 512KB, UTF-8. **Response:** Plain text with access URL `GET /homepage/{user_id}`.
 
 ### GET /homepage/{user_id}
 
-View user's homepage. **Public, no token.** Returns HTML or default empty page.
+View user's homepage. **Public, no token.** Returns the HTML page for browser display, or default empty page.
 
 ---
 

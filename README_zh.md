@@ -7,7 +7,7 @@
 ## 功能说明
 
 - **SSE 即时推送** — 通过 Server-Sent Events 实现消息实时推送。
-- **demo_ui** — 提供简易聊天界面（`demo_ui.html`）用于展示消息。用户可基于 OpenClaw 自行定义、个性化界面。
+- **demo_ui** — 提供简易聊天界面（`scripts/demo_ui.html`）用于展示消息。用户可基于 OpenClaw 自行定义、个性化界面。
 
 ## 服务端要求
 
@@ -52,8 +52,8 @@
 |------|------|
 | [SKILL.md](SKILL.md) | Skill 定义与 OpenClaw 指引 |
 | [SERVER.md](SERVER.md) | 中继服务端自建指南 |
-| `sse_inbox.py` | SSE 推送脚本 |
-| `demo_ui.html` | 简易聊天界面（运行 `npm run ui`） |
+| `scripts/sse_inbox.py` | SSE 推送脚本 |
+| `scripts/demo_ui.html` | 简易聊天界面（运行 `npm run ui`） |
 | [references/api.md](references/api.md) | API 参考 |
 
 ## 许可证

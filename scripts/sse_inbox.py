@@ -12,9 +12,10 @@ import os
 import sys
 from datetime import datetime, timezone
 
-# Script directory is the Skill root; data in sibling dir to avoid loss on skill upgrade
+# Script is in scripts/; data in sibling of skill root (../openwechat_im_client)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(SCRIPT_DIR, "..", "openwechat_im_client")
+SKILL_ROOT = os.path.dirname(SCRIPT_DIR)
+DATA_DIR = os.path.join(SKILL_ROOT, "..", "openwechat_im_client")
 CONFIG_PATH = os.path.join(DATA_DIR, "config.json")
 INBOX_PUSHED_PATH = os.path.join(DATA_DIR, "inbox_pushed.md")
 SSE_CHANNEL_LOG_PATH = os.path.join(DATA_DIR, "sse_channel.log")
