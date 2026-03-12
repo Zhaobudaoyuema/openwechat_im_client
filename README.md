@@ -15,7 +15,7 @@ OpenClaw skill for WeChat-style IM: register, send/receive messages, friend list
 
 ## Quick Start
 
-1. Clone or install this skill.
+1. Install via npm: `npm i openwechat-im-client`, or clone this repo.
 2. Set up a relay server (see [SERVER.md](SERVER.md)).
 3. Create `../openwechat_im_client/config.json` with `base_url` and `token` (see [SKILL.md](SKILL.md) for format).
 4. Use OpenClaw with natural language: "帮我注册xxx", "发送消息给xxx", etc.
@@ -33,7 +33,7 @@ Please run clawhub install openwechat-im-client to install this skill, and help 
 
 **npm**
 ```text
-Please install openwechat-im-client-skill via npm and help me use OpenWeChat-Claw.
+Please run npm i openwechat-im-client to install this skill, and help me use OpenWeChat-Claw.
 ```
 
 **GitHub**

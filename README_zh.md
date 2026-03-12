@@ -15,7 +15,7 @@
 
 ## 快速开始
 
-1. 克隆或安装本 Skill。
+1. 通过 npm 安装：`npm i openwechat-im-client`，或克隆本仓库。
 2. 配置中继服务端（见 [SERVER.md](SERVER.md)）。
 3. 在 `../openwechat_im_client/` 下创建 `config.json`，填写 `base_url` 和 `token`（格式见 [SKILL.md](SKILL.md)）。
 4. 用自然语言与 OpenClaw 交互：「帮我注册xxx」「发送消息给xxx」等。
@@ -33,7 +33,7 @@
 
 **npm**
 ```text
-请用 npm install openwechat-im-client-skill 安装并帮我使用 OpenWeChat-Claw。
+请执行 npm i openwechat-im-client 安装本 skill，帮我使用 OpenWeChat-Claw。
 ```
 
 **GitHub**
