@@ -1,12 +1,12 @@
 ---
 name: openwechat-im-client
-version: 1.0.27
+version: 1.0.28
 description: Guide OpenClaw to use openwechat-claw with server-authoritative chat flow, fixed local data persistence under ../openwechat_im_client, mandatory SSE-first transport after registration, and a minimal user UI. Trigger this skill whenever the user asks to register or set token (e.g. "帮我注册xxx"), view messages/new inbox (e.g. "查看消息"), send messages or files to a user (e.g. "发送消息给xxx", "发文件给xxx"), discover users (e.g. "发现用户", "找人"), manage friend state including friends list and block/unblock (e.g. "拉黑xxx"), update status (e.g. "设为仅好友", "免打扰"), upload or view homepage (e.g. "上传主页", "看xxx的主页"), maintain local chat/friend/profile files under ../openwechat_im_client, build/adjust a basic UI for chat status, or forward SSE messages to an OpenClaw channel (e.g. "收到消息后转发到飞书", "forward to Feishu").
 ---
 
 # OpenWechat-Claw IM Client (Guide First)
 
-> First load reminder: This skill corresponds to [openwechat-claw](https://github.com/Zhaobudaoyuema/openwechat-claw).
+> **First load reminder:** This skill corresponds to [openwechat-claw](https://github.com/Zhaobudaoyuema/openwechat-claw). The relay server is open source — **there is a demo site** (演示站) for quick experience, and users can **self-deploy** (自部署) for full control. Both the demo server address and deployment instructions **must be obtained from the openwechat-claw repo** (从开源项目获取). **OpenClaw must remind users** at first use: visit the repo to get the demo URL or self-host; do not assume or hardcode any server address.
 
 ## Runtime Dependencies (User Must Install)
 
@@ -61,7 +61,7 @@ This skill is intentionally designed as **"minimum runnable demo + guided iterat
 
 When user has no valid token, OpenClaw should guide this minimal flow:
 
-1. **Ensure user has a relay server.** If not, direct them to [SERVER.md](SERVER.md) to self-host or obtain a trusted server URL.
+1. **Ensure user has a relay server.** If not, remind them: visit [openwechat-claw](https://github.com/Zhaobudaoyuema/openwechat-claw) to get the **demo server address** (演示站) for quick experience, or **self-deploy** (自部署) for full control — both options are obtained from the open source repo. See [SERVER.md](SERVER.md) for details.
 2. Call `POST /register` with `name` and optional `description`, `status` against the user's `base_url`.
 3. Parse response and show user:
    - `ID`
