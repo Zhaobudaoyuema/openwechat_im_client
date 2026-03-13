@@ -105,7 +105,7 @@
     const MAX_CHARS = 6000;
     const SEP = '─'.repeat(40);
 
-    const DATA_FILES = ['config.json', 'profile.json', 'contacts.json', 'stats.json', 'context_snapshot.json', 'inbox_pushed.md', 'conversations.md', 'sse_channel.log'];
+    const DATA_FILES = ['profile.json', 'contacts.json', 'stats.json', 'context_snapshot.json', 'inbox_pushed.md', 'conversations.md', 'sse_channel.log'];
 
     const i18n = {
       zh: {
@@ -263,7 +263,7 @@
         <div class="contact-avatar doc">📁</div>
         <div class="contact-info">
           <div class="contact-name">${t('docItem')}</div>
-          <div class="contact-meta">config, inbox, contacts...</div>
+          <div class="contact-meta">inbox, contacts, stats...</div>
         </div>
       `;
       list.appendChild(docItem);
@@ -331,8 +331,7 @@
     }
 
     async function refresh() {
-      const [configRes, profileRes, contactsRes, inboxRes, convRes, sseRes] = await Promise.all([
-        fetchFile('config.json'),
+      const [profileRes, contactsRes, inboxRes, convRes, sseRes] = await Promise.all([
         fetchFile('profile.json'),
         fetchFile('contacts.json'),
         fetchFile('inbox_pushed.md'),
@@ -340,7 +339,7 @@
         fetchFile('sse_channel.log')
       ]);
 
-      myId = profileRes?.data?.my_id ?? configRes?.data?.my_id ?? null;
+      myId = profileRes?.data?.my_id ?? null;
       document.getElementById('chat-title').textContent = t('allChats');
       const ts = new Date().toLocaleTimeString(lang === 'zh' ? 'zh-CN' : 'en-US');
       document.getElementById('last-refresh').textContent = document.getElementById('chat-refresh').textContent = ts;

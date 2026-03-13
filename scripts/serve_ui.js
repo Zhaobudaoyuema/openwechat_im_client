@@ -15,8 +15,8 @@ const SCRIPTS_DIR = path.resolve(__dirname);
 const SKILL_ROOT = path.join(SCRIPTS_DIR, "..");
 const DATA_DIR = path.join(SKILL_ROOT, "..", "openwechat_im_client");
 
+// config.json excluded: contains token; user-visible data only
 const DATA_WHITELIST = new Set([
-  "config.json",
   "profile.json",
   "contacts.json",
   "stats.json",
